@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escalation Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    .indicator {
+      font-weight: bold;
+      padding: 5px;
+      color: #fff;
+      border-radius: 5px;
+    }
+
+    .level-1 {
+      background-color: green;
+    }
+
+    .level-2 {
+      background-color: orange;
+    }
+
+    .level-3 {
+      background-color: red;
+    }
+
+    .level-4 {
+      background-color: darkred;
+    }
+
+    .progress-container {
+      height: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: #76c7c0;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Escalation Tracker</h1>
+
+<form id="escalation-form">
+  <label>
+    Customer Name:
+    <input type="text" id="customer-name" required>
+  </label>
+  <label>
+    Escalation Time:
+    <input type="datetime-local" id="escalation-time" required>
+  </label>
+  <button type="submit">Track</button>
+</form>
+
+<div class="controls">
+  <button id="refresh-progress">Refresh Progress</button>
+</div>
+
+<table id="escalation-table">
+  <thead>
+    <tr>
+      <th>Customer Name</th>
+      <th>Escalation Time</th>
+      <th>Status</th>
+      <th>Progress</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<script>
+  const form = document.getElementById("escalation-form");
+  const refreshButton = document.getElementById("refresh-progress");
+  const tableBody = document.querySelector("#escalation-table tbody");
+
+  const escalations = [];
+
+  // Request notification permission
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission().then(permission => {
+      if (permission !== "granted") {
+        alert("Notifications are disabled. Enable them to receive updates.");
+      }
+    });
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const customerName = document.getElementById("customer-name").value;
+    const escalationTime = document.getElementById("escalation-time").value;
+
+    if (!customerName || !escalationTime) return;
+
+    const escalation = {
+      id: Date.now(),
+      customerName,
+      escalationTime: new Date(escalationTime),
+      currentLevel: "Level 1 (Initial)",
+    };
+
+    escalations.push(escalation);
+    updateTable();
+    form.reset();
+  });
+
+  function updateTable() {
+    tableBody.innerHTML = "";
+
+    escalations.forEach((escalation) => {
+      const now = new Date();
+      const diffMinutes = Math.floor((now - escalation.escalationTime) / (1000 * 60));
+      const previousLevel = escalation.currentLevel;
+
+      let status = "";
+      let progress = 0;
+
+      if (diffMinutes >= 360) {
+        status = '<span class="indicator level-4">Escalate to Level 4</span>';
+        escalation.currentLevel = "Level 4";
+        progress = 100;
+      } else if (diffMinutes >= 240) {
+        status = '<span class="indicator level-3">Escalate to Level 3</span>';
+        escalation.currentLevel = "Level 3";
+        progress = ((diffMinutes - 240) / 120) * 100;
+      } else if (diffMinutes >= 120) {
+        status = '<span class="indicator level-2">Escalate to Level 2</span>';
+        escalation.currentLevel = "Level 2";
+        progress = ((diffMinutes - 120) / 120) * 100;
+      } else {
+        status = '<span class="indicator level-1">Level 1 (Initial)</span>';
+        escalation.currentLevel = "Level 1 (Initial)";
+        progress = (diffMinutes / 120) * 100;
+      }
+
+      // Check if escalation level changed
+      if (previousLevel !== escalation.currentLevel) {
+        sendNotification(escalation.customerName, escalation.currentLevel);
+      }
+
+      const row = `
+        <tr>
+          <td>${escalation.customerName}</td>
+          <td>${escalation.escalationTime.toLocaleString()}</td>
+          <td>${status}</td>
+          <td>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${progress}%;"></div>
+            </div>
+          </td>
+          <td><button onclick="removeEscalation(${escalation.id})">Remove</button></td>
+        </tr>
+      `;
+
+      tableBody.innerHTML += row;
+    });
+  }
+
+  function removeEscalation(id) {
+    const index = escalations.findIndex((esc) => esc.id === id);
+    if (index !== -1) {
+      escalations.splice(index, 1);
+      updateTable();
+    }
+  }
+
+  // Function to send a web notification
+  function sendNotification(customerName, currentLevel) {
+    if (Notification.permission === "granted") {
+      new Notification("Escalation Tracker", {
+        body: `${customerName} is now at ${currentLevel}`,
+        icon: "https://via.placeholder.com/150" // You can replace this with your own icon
+      });
+    }
+  }
+
+  // Refresh progress button functionality
+  refreshButton.addEventListener("click", () => {
+    updateTable();
+  });
+
+  // Update the table every minute to refresh statuses automatically
+  setInterval(updateTable, 60000);
+</script>
+
+</body>
+</html>
