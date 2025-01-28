@@ -5,9 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Escalation Tracker</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+  body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-image: url('images/mtn.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: white;
+  padding-bottom: 40px; /* Add enough padding to avoid footer overlap */
+}
+
+footer {
+  text-align: center;
+  padding: 10px 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 14px;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 1; /* Ensures the footer is in the correct layer */
+}
+
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.5); /* Black background with 50% opacity */
+      padding: 20px;
+      border-radius: 10px;
     }
 
     table {
@@ -84,37 +109,39 @@
 </head>
 <body>
 
-<h1>Escalation Tracker</h1>
+<div class="container">
+  <h1 style="color: white;">Escalation Tracker</h1>
 
-<form id="escalation-form">
-  <label>
-    Customer Name:
-    <input type="text" id="customer-name" required>
-  </label>
-  <label>
-    Escalation Time:
-    <input type="datetime-local" id="escalation-time" required>
-  </label>
-  <button type="submit">Track</button>
-</form>
+  <form id="escalation-form">
+    <label style="color: white;">
+      Customer Name:
+      <input type="text" id="customer-name" required>
+    </label>
+    <label style="color: white;">
+      Escalation Time:
+      <input type="datetime-local" id="escalation-time" required>
+    </label>
+    <button type="submit">Track</button>
+  </form>
 
-<div class="controls">
-  <button id="refresh-progress">Refresh Progress</button>
+  <div class="controls">
+    <button id="refresh-progress">Refresh Progress</button>
+  </div>
+
+  <table id="escalation-table">
+    <thead style="color: black;">
+      <tr>
+        <th>Customer Name</th>
+        <th>Escalation Time</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
 </div>
-
-<table id="escalation-table">
-  <thead>
-    <tr>
-      <th>Customer Name</th>
-      <th>Escalation Time</th>
-      <th>Status</th>
-      <th>Progress</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
 
 <script>
   const form = document.getElementById("escalation-form");
@@ -232,4 +259,10 @@
 </script>
 
 </body>
+<!-- Footer Section -->
+<footer style="text-align: center; padding: 10px 0; background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 14px; position: fixed; width: 100%; bottom: 0;">
+  <p>&copy; 2025 Escalation Tracker. All rights reserved.</p>
+  <p>Designed by <a href="https://ifeoluwa.dev" target="_blank" style="color: #007BFF;">ifeoluwa.dev</a></p>
+</footer>
+
 </html>
